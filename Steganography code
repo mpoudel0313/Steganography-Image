@@ -1,0 +1,118 @@
+// This function crops the function
+function crop(image,width,height)  {
+    var n = new SimpleImage(width,height);
+    for (var p of image.values())  {
+        var x = p.getX();
+        var y = p.getY();
+        if (x<width && y < height)  {
+            var np = n.getPixel(x,y);
+            np.setRed(p.getRed());
+            np.setBlue(p.getBlue());
+            np.setGreen(p.getGreen());
+        }
+    }
+    return n;
+}
+// Takes 2 image and crops their size to make it equal
+
+var start = new SimpleImage('duvall.jpg');
+var hide = new SimpleImage('rodger.png');
+var cropwidth = start.getWidth();
+if ( hide.getWidth() < cropwidth) {
+    cropwidth =  hide.getWidth();
+}
+var cropheight = start.getHeight();
+if (hide.getHeight()< cropheight) {
+    cropheight = hide.getHeight();
+}
+startc = crop(start,cropwidth,cropheight);
+hidec = crop(hide,cropwidth,cropheight);
+
+
+// This function chops the right 2 bits of the pixel to create a room for the
+// hidden image The image will be hide in the 2 bits.
+function pixchange(pixval)  {
+    var x = Math.floor(pixval/4)*4;
+    return x;
+}
+function chop2hide(image)  {
+    for(var px of image.values())   {
+        px.setRed(pixchange(px.getRed()));
+        px.setGreen(pixchange(px.getGreen()));
+        px.setBlue(pixchange(px.getBlue()));
+    }
+    return image;
+}
+
+
+//This function will remove the left side of the pixel in order to be hidden to the
+// to chop2hide
+
+function shift(im)   {
+    var nim = new SimpleImage(im.getWidth(),im.getHeight());
+    for (var px of im.values()) {
+        var x = px.getX();
+        var y = px.getY();
+        var npx = nim.getPixel(x,y);
+        npx.setRed(Math.floor(px.getRed()/64));
+        npx.setGreen(Math.floor(px.getGreen()/64));
+        npx.setBlue(Math.floor(px.getBlue()/64));
+    }
+    return nim;
+}
+
+// This will create the Image ready for hiding
+starts = chop2hide(startc);
+hides = shift(hidec);
+
+// gives error message if rgb is greater than 255
+function newpv(p,q)  {
+    var answer = p+q;
+    if (p+q >255) print ('error: RGB values cannot be greater than 255');
+    return answer;
+}
+
+// Function to Hide image into another
+function combine(image1,image2) {
+    var n = new SimpleImage(image1.getWidth(),image1.getHeight());
+    for (var pa of image1.values()) {
+        var x = pa.getX();
+        var y = pa.getY();
+        var pb = image2.getPixel(x,y);
+        var np = n.getPixel(x,y);
+        np.setRed(newpv(pa.getRed(),pb.getRed()));
+        np.setGreen(newpv(pa.getGreen(),pb.getGreen()));
+        np.setBlue(newpv(pa.getBlue(),pb.getBlue()));
+    }
+    return n;
+}
+
+// Hides images into another image
+combinedimage = combine(starts,hides);
+
+
+// This will extract the hidden image
+function extract(image)  {
+    var exim = new SimpleImage(image.getWidth(),image.getHeight());
+    for (var px of image.values())  {
+        var x = px.getX();
+        var y = px.getY();
+        var npx = exim.getPixel(x,y);
+        var num = px.getRed();
+        num = (num-(Math.floor(num/4)*4))*64;
+        npx.setRed(num);
+        num = px.getGreen();
+        num = (num - (Math.floor(num/4)*4))*64;
+        npx.setGreen(num);
+        num = px.getBlue();
+        num = (num-(Math.floor(num/4)*4)) *64;
+        npx.setBlue(num);
+    }
+    return exim;
+}
+
+print (extract(combinedimage));
+
+
+
+
